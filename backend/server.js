@@ -8,6 +8,10 @@ const postRouter = require("./routes/api/posts");
 
 const app = express();
 
+// Init middleware
+// iske jariye hmare pass data frontend se backend ata h
+app.use(express.json());
+
 // connecting to mongodb
 connectDB();
 app.get("/", (req, res) => res.send("API running"));
