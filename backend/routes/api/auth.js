@@ -7,6 +7,7 @@ const { check, validationResult } = require("express-validator");
 const config = require("config");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+
 // @route    GET api/auth
 // @desc     Get user by token
 // @access   Private
@@ -46,6 +47,7 @@ authRouter.post(
           .json({ errors: [{ msg: "Invalid Credentials" }] });
       }
 
+      //   matching password given by user and password stored in database
       const isMatch = await bcrypt.compare(password, user.password);
 
       if (!isMatch) {
@@ -60,6 +62,7 @@ authRouter.post(
         },
       };
 
+      //   creating JWT token
       jwt.sign(
         payload,
         config.get("jwtSecretKey"),
