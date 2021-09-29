@@ -1,6 +1,6 @@
 // handling request coming from profile route
 const express = require("express");
-const { check, validationResult,checkObjectId} = require("express-validator");
+const { check, validationResult, checkObjectId } = require("express-validator");
 const profileRouter = express.Router();
 const auth = require("../../middleware/auth");
 const Profile = require("../../models/Profile");
@@ -117,44 +117,77 @@ profileRouter.get("/", async (req, res) => {
 // @route    GET api/profile/user/:user_id
 // @desc     Get profile by user ID
 // @access   Public
-profileRouter.get(
-  '/user/:user_id',
-  async ({ params: { user_id } }, res) => {
-    try {
-      const profile = await Profile.findOne({
-        user: user_id
-      }).populate('user', ['name', 'avatar']);
+profileRouter.get("/user/:user_id", async ({ params: { user_id } }, res) => {
+  try {
+    const profile = await Profile.findOne({
+      user: user_id,
+    }).populate("user", ["name", "avatar"]);
 
-      if (!profile) return res.status(400).json({ msg: 'Profile not found' });
+    if (!profile) return res.status(400).json({ msg: "Profile not found" });
 
-      return res.json(profile);
-    } catch (err) {
-      console.error(err.message);
-      if(err.kind == 'ObjectId')
-      {
-        return res.status(400).json({ msg: 'Profile not found' })
-      }
-      return res.status(500).json({ msg: 'Server error' });
+    return res.json(profile);
+  } catch (err) {
+    console.error(err.message);
+    if (err.kind == "ObjectId") {
+      return res.status(400).json({ msg: "Profile not found" });
     }
+    return res.status(500).json({ msg: "Server error" });
   }
-);
+});
 
 // @route    DELETE api/profile
 // @desc     Delete profile, user & posts
 // @access   Private
-profileRouter.delete('/', auth, async (req, res) => {
+profileRouter.delete("/", auth, async (req, res) => {
   try {
     // Remove user posts
     // Remove profile
-    await Profile.findOneAndRemove({ user: req.user.id })
+    await Profile.findOneAndRemove({ user: req.user.id });
 
     // Remove user
-      await User.findOneAndRemove({ _id: req.user.id })
+    await User.findOneAndRemove({ _id: req.user.id });
 
-    res.json({ msg: 'User deleted' });
+    res.json({ msg: "User deleted" });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server Error');
+    res.status(500).send("Server Error");
   }
 });
+
+// @route    PUT api/profile/experience
+// @desc     Add profile experience
+// @access   Private
+profileRouter.put(
+  "/experience",
+  [
+    auth,
+    [
+      check("title", "Title is required").notEmpty(),
+      check("company", "Company is required").notEmpty(),
+      check(
+        "from",
+        "From date is required and needs to be from the past"
+      ).notEmpty(),
+    ],
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const profile = await Profile.findOne({ user: req.user.id });
+
+      profile.experience.unshift(req.body);
+
+      await profile.save();
+
+      res.json(profile);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send("Server Error");
+    }
+  }
+);
 module.exports = profileRouter;
