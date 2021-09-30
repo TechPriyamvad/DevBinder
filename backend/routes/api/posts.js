@@ -241,7 +241,7 @@ postRouter.delete("/comment/:id/:comment_id", auth, async (req, res) => {
     if (!comments) {
       return res.status(404).json({ msg: "Comment does not exist" });
     }
-    // Check user
+    // Check user is authorized to delete comment
     if (comments.user.toString() !== req.user.id) {
       return res.status(401).json({ msg: "User not authorized" });
     }
