@@ -1,20 +1,20 @@
 // handling request coming from post route
-const express = require('express');
+const express = require("express");
 const postRouter = express.Router();
-const { check, validationResult } = require('express-validator');
-const auth = require('../../middleware/auth');
+const { check, validationResult } = require("express-validator");
+const auth = require("../../middleware/auth");
 
-const Post = require('../../models/Posts');
-const User = require('../../models/User');
+const Post = require("../../models/Posts");
+const User = require("../../models/User");
 // const checkObjectId = require('../../middleware/checkObjectId');
 
 // @route    POST api/posts
 // @desc     Create a post
 // @access   Private
 postRouter.post(
-  '/',
+  "/",
   auth,
-  check('text', 'Text is required').notEmpty(),
+  check("text", "Text is required").notEmpty(),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -22,13 +22,13 @@ postRouter.post(
     }
 
     try {
-      const user = await User.findById(req.user.id).select('-password');
+      const user = await User.findById(req.user.id).select("-password");
 
       const newPost = new Post({
         text: req.body.text,
         name: user.name,
         avatar: user.avatar,
-        user: req.user.id
+        user: req.user.id,
       });
 
       const post = await newPost.save();
@@ -36,9 +36,77 @@ postRouter.post(
       res.json(post);
     } catch (err) {
       console.error(err.message);
-      res.status(500).send('Server Error');
+      res.status(500).send("Server Error");
     }
   }
 );
 
-module.exports = postRouter
+// @route    GET api/posts
+// @desc     Get all posts
+// @access   Private
+postRouter.get("/", auth, async (req, res) => {
+  try {
+    // find all posts and sort them by most recent one
+    const posts = await Post.find().sort({ date: -1 });
+    res.json(posts);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+});
+
+// @route    GET api/posts/:id
+// @desc     Get post by ID
+// @access   Private
+postRouter.get("/:id", auth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+
+    // check if post exist in database
+    if (!post) {
+      return res.status(404).json({ msg: "Post not found" });
+    }
+
+    res.json(post);
+  } catch (err) {
+    console.error(err.message);
+    //check if post id is valid or not
+    if (err.kind === "ObjectId") {
+      return res.status(404).json({ msg: "Post not found" });
+    }
+    res.status(500).send("Server Error");
+  }
+});
+
+// @route    DELETE api/posts/:id
+// @desc     Delete a post
+// @access   Private
+postRouter.delete("/:id", auth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+
+    //check if post exists in database
+    if (!post) {
+      return res.status(404).json({ msg: "Post not found" });
+    }
+
+    // Check if the user who wants to delete post is similar to user who has created it
+    if (post.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: "User not authorized" });
+    }
+
+    await post.remove();
+
+    res.json({ msg: "Post removed" });
+  } catch (err) {
+    console.error(err.message);
+    // check if error is due to invalid post id
+    if (err.kind === "ObjectId") {
+      return res.status(404).json({ msg: "Post not found" });
+    }
+    res.status(500).send("Server Error");
+  }
+});
+
+
+module.exports = postRouter;
