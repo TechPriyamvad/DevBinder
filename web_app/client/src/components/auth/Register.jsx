@@ -11,7 +11,6 @@ const Register = () => {
 
   const { name, email, password, password2 } = formData;
   const onChange = (e) => {
-    console.log({[e.target.name]:e.target.value});
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -20,7 +19,7 @@ const Register = () => {
     if (password !== password2) {
       console.log("Passwords do not match", "danger");
     } else {
-      console.log(formData);
+      console.log('SUCCESS');
     }
   };
   return (
