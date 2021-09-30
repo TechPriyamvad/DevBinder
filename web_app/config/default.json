@@ -1,0 +1,6 @@
+{
+    "MONGODB_URL":"mongodb+srv://techpriyam1:UfuzMEaafs6JS62y@cluster0.buylq.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
+    "jwtSecretKey":"devbinder",
+    "githubClientId":"36f6c164bfbdfed246a7",
+    "githubClientSecret":"247b092488cd51885e1617762d3a04798feca037"
+}
